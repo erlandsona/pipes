@@ -1,0 +1,92 @@
+name:                pipes
+version:             0.1.0.0
+#synopsis:
+#description:
+homepage:            https://github.com/githubuser/pipes#readme
+license:             BSD3
+author:              Author name here
+maintainer:          example@example.com
+copyright:           2023 Author name here
+category:            Web
+extra-source-files:
+- README.md
+
+default-extensions:
+- NoImplicitPrelude
+- BlockArguments
+- DataKinds
+# - DeriveAnyClass
+- DerivingStrategies
+- DerivingVia
+- DuplicateRecordFields
+- LambdaCase
+- MultiWayIf
+- OverloadedRecordDot
+- OverloadedStrings
+# - PackageImports
+- QuasiQuotes
+- RecordWildCards
+- StrictData
+- TemplateHaskell
+- TypeFamilies
+# - UnicodeSyntax
+- UnliftedNewtypes
+
+dependencies:
+# - name: base
+#   version: ">= 4.7 && < 5"
+#   mixin: [hiding (Prelude)]
+# - name: relude
+#   mixin: [(Relude as Prelude)]
+- base >= 4.7 && < 5
+- relude
+- parsley
+- string-interpolate
+- text
+
+
+# The library contains all of our application code.
+# The executable defined below is just a thin wrapper.
+library:
+  source-dirs: src
+  language: GHC2021
+
+ghc-options:
+# for hie
+- -fwrite-ide-info
+- -hiedir=.hie
+- -haddock
+# Useful Flags
+- -Wall
+# - -Werror
+- -Wcompat
+- -Wredundant-constraints
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+
+# Runnable executable for our application
+executables:
+  pipes:
+    source-dirs: app
+    main: Main.hs
+    language: GHC2021
+    dependencies:
+    - pipes
+    ghc-options:
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N
+
+# Test suite
+tests:
+  pipes-test:
+    source-dirs: test
+    main: Main.hs
+    dependencies:
+    - pipes
+    - tasty
+    - tasty-hspec
+    ghc-options:
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N

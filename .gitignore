@@ -1,4 +1,26 @@
-# elm-package generated files
-elm-stuff
-# elm-repl generated files
-repl-temp-*
+elm-stuff/
+dist*
+static/tmp/
+static/combined/
+config/client_session_key.aes
+*.hie
+*.hi
+*.o
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+.hsenv*
+cabal-dev/
+.stack-work/
+.stack-work-devel/
+yesod-devel/
+.cabal-sandbox
+cabal.sandbox.config
+.DS_Store
+*.swp
+*.keter
+*~
+\#*
+pipes.cabal
+# Vs code
+.history/
