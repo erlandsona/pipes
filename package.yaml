@@ -63,6 +63,10 @@ ghc-options:
 - -Wredundant-constraints
 - -Wincomplete-record-updates
 - -Wincomplete-uni-patterns
+# Turning off some warnings for a bit.
+- -Wno-unused-imports
+- -Wno-unused-local-binds
+- -Wno-unused-matches
 
 # Runnable executable for our application
 executables:

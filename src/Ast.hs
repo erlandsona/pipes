@@ -1,8 +1,13 @@
+{-# LANGUAGE DatatypeContexts #-}
+
 module Ast where
 
-import Relude hiding (show)
+import Relude hiding (fmap, many, pure, show, some, (<$>), (<|>))
 
+import Data.Char
 import Data.String.Interpolate (i)
+import Parsley
+import Parsley.Char
 import Text.Show
 
 data Exp t where
@@ -10,6 +15,7 @@ data Exp t where
   Var :: String -> Exp t
   Boo :: Bool -> Exp Bool
   Nat :: Word -> Exp Word
+  Eq :: (Show t) => Exp t -> Exp t -> Exp Bool
   -- Bool Operations
   Neg :: Exp t -> Exp t
   And :: Exp Bool -> Exp Bool -> Exp Bool
@@ -27,6 +33,7 @@ instance (Show t) => Show (Exp t) where
     Boo x -> show x
     Nat x -> show x
     -- Operations
+    Eq x y -> [i|#{x} == #{y}|]
     Neg x -> [i|-#{x}|]
     And x y -> [i|#{x} && #{y}|]
     Or x y -> [i|#{x} || #{y}|]
@@ -34,6 +41,17 @@ instance (Show t) => Show (Exp t) where
     Sub x y -> [i|#{x} - #{y}|]
     Mul x y -> [i|#{x} * #{y}|]
     Div x y -> [i|#{x} / #{y}|]
+
+varParser :: Parser (Exp String)
+varParser = varQ <$> (some letter)
+
+-- boolParser = Boo <$> string "true" <|> string "false"
+
+-- -- 0000123 is technically valid :thinking:
+-- natParser = pure (_code Nat) <$> some digit
+
+varQ :: WQ (String -> Exp t)
+varQ = makeQ Var [||Var||]
 
 -- data Exp where
 --   Var :: Text -> Exp
