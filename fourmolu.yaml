@@ -1,0 +1,32 @@
+# Generated from web app, for more information, see: https://fourmolu.github.io/config/
+indentation: 4
+column-limit: none
+function-arrows: leading
+comma-style: leading
+import-export-style: leading
+indent-wheres: true
+record-brace-space: false
+newlines-between-decls: 1
+haddock-style: single-line
+haddock-style-module: null
+let-style: auto
+in-style: no-space
+single-constraint-parens: never
+unicode: never
+respectful: true
+fixities:
+  - infix 4  ==
+  # infix Right's
+  - infixr 9  .
+  - infixr 6 <>
+  - infixr 5  ++
+  - infixr 4 :>
+  - infixr 3  &&
+  - infixr 2  ||
+  - infixr 1  =<<
+  - infixr 0  $, $!
+  # infix Lefts's
+  - "infixl 9 .:"
+  - infixl 4 <$, <$>, <*>, <*, *>, <**>
+  - infixl 1  >>, >>=, &, <&>
+  - infixl 0 :-

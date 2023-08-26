@@ -3,10 +3,12 @@ module Lib where
 import Relude
 
 import Data.Text qualified as T
-import Parsley (parseFromFile)
+import Data.Void
+import Text.Megaparsec
 
 import Ast
 
-go :: FilePath -> IO (Maybe (Exp String))
-go = $$(parseFromFile varParser)
-
+go :: FilePath -> IO (Either (ParseErrorBundle Text Void) Expr)
+go file = do
+    contents <- decodeUtf8 <$> readFileBS file
+    pure $ parse expr file contents

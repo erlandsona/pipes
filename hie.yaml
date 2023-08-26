@@ -1,0 +1,28 @@
+cradle:
+  stack:
+    - path: "."
+      component: "pipes:lib"
+
+    # - path: "./rms-common/src"
+    #   component: "rms-common:lib"
+    #
+    # - path: "./rms-config/src"
+    #   component: "rms-config:lib"
+    #
+    # - path: "./notes-service/src"
+    #   component: "notes-service:lib"
+
+    # - path: "./notes-service/test"
+    #   component: "notes-service:test:notes-service-test"
+
+    # - path: "./rms-notes"
+    #   component: "rms-notes:lib"
+
+    # - path: "./rms-notes/exec/Main.hs"
+    #   component: "rms-notes:exe:rms-notes"
+    #
+    # - path: "./rms-notes/exec/njson-test/Main.hs"
+    #   component: "rms-notes:exe:njson-test"
+    #
+    # - path: "./rms-notes/test"
+    #   component: "rms-notes:test:tests"

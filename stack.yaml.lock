@@ -3,28 +3,7 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages:
-- completed:
-    hackage: parsley-2.0.0.1@sha256:90b359dd7c3ee704b1dd10513f6a2a30ba63f7e1c709feba5f60642bd5235dc6,8059
-    pantry-tree:
-      sha256: 3d49751fc613d6c895b182abec0f277a22c299469d318beaaba3cfbfa195e014
-      size: 2529
-  original:
-    hackage: parsley-2.0.0.1
-- completed:
-    hackage: parsley-core-2.3.0.0@sha256:e99e83e551429b7b93ed8dc8cd1b9602938c3c8f9c1a52743181389163780e92,10072
-    pantry-tree:
-      sha256: f59cf5f639c4e46a47da019a8a8e702d0a63ed42145f595bfa891f60a49ef946
-      size: 6998
-  original:
-    hackage: parsley-core-2.3.0.0
-- completed:
-    hackage: rangeset-0.1.0.0@sha256:c0f07239d14f0797b21b2c29dd99cae1d0225dfcf02699980a481e7762147196,4381
-    pantry-tree:
-      sha256: 4e95be6097901f477ae1963d191f03573a9368881d4151ea9ad5444ebfddda63
-      size: 1967
-  original:
-    hackage: rangeset-0.1.0.0
+packages: []
 snapshots:
 - completed:
     sha256: 2e7d4a730d8eb5373b2d383fac84efcf7c81e3b7a5fce71b4c2e19a1768f25a6

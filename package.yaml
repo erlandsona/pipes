@@ -19,6 +19,7 @@ default-extensions:
 - DerivingStrategies
 - DerivingVia
 - DuplicateRecordFields
+- ImportQualifiedPost
 - LambdaCase
 - MultiWayIf
 - OverloadedRecordDot
@@ -40,9 +41,9 @@ dependencies:
 #   mixin: [(Relude as Prelude)]
 - base >= 4.7 && < 5
 - relude
-- parsley
+- megaparsec
+- parser-combinators
 - string-interpolate
-- text
 
 
 # The library contains all of our application code.
@@ -86,10 +87,13 @@ tests:
   pipes-test:
     source-dirs: test
     main: Main.hs
+    language: GHC2021
     dependencies:
     - pipes
+    - hspec
     - tasty
     - tasty-hspec
+    - hspec-megaparsec
     ghc-options:
     - -rtsopts
     - -threaded
