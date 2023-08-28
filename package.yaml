@@ -70,17 +70,17 @@ ghc-options:
 - -Wno-unused-matches
 
 # Runnable executable for our application
-executables:
-  pipes:
-    source-dirs: app
-    main: Main.hs
-    language: GHC2021
-    dependencies:
-    - pipes
-    ghc-options:
-    - -rtsopts
-    - -threaded
-    - -with-rtsopts=-N
+# executables:
+#   pipes:
+#     source-dirs: app
+#     main: Main.hs
+#     language: GHC2021
+#     dependencies:
+#     - pipes
+#     ghc-options:
+#     - -rtsopts
+#     - -threaded
+#     - -with-rtsopts=-N
 
 # Test suite
 tests:

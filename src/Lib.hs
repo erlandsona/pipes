@@ -6,9 +6,17 @@ import Data.Text qualified as T
 import Data.Void
 import Text.Megaparsec
 
-import Ast
+import Calc qualified
+import Lam qualified
 
-go :: FilePath -> IO (Either (ParseErrorBundle Text Void) Expr)
-go file = do
+type Errs = ParseErrorBundle Text Void
+
+calc :: FilePath -> IO (Either Errs Calc.Expr)
+calc file = do
     contents <- decodeUtf8 <$> readFileBS file
-    pure $ parse expr file contents
+    pure $ parse Calc.expr file contents
+
+lam :: FilePath -> IO (Either Errs Lam.Expr)
+lam file = do
+    contents <- decodeUtf8 <$> readFileBS file
+    pure $ parse Lam.expr file contents

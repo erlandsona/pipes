@@ -1,0 +1,19 @@
+
+identity l \l
+
+const a b \a
+
+flip f a b \f b a
+
+- nat -> nat -> Bool
+check one two
+  \one = two
+
+- bool -> bool -> bool
+and 1 2
+  \1 & 2
+
+
+- option a
+| none : option a
+| some : a -> option a

@@ -1,4 +1,4 @@
-module Ast where
+module Lam where
 
 import Relude hiding (many, show, some, takeWhile)
 
@@ -14,72 +14,35 @@ import Text.Show
 type Parser = Parsec Void Text
 
 data Expr
-    = -- Terms
-      Var Text
-    | Boo Bool
-    | Nat Word
-    | Eq Expr Expr
-    | -- Bool Operations
-      Neg Expr
-    | And Expr Expr
-    | Or Expr Expr
-    | -- Elementary Algebra
-      Add Expr Expr
-    | Sub Expr Expr
-    | Mul Expr Expr
-    | Div Expr Expr
+    = Var Text
+    | Lam Expr Expr
+    | App Expr Expr
     deriving (Show, Eq)
 
--- instance (Show) => Show (Expr) where
---     show = \case
---         -- Terms
---         Var x -> show x
---         Boo x -> show x
---         Nat x -> show x
---         -- Operations
---         Eq x y -> [i|#{x} == #{y}|]
---         Neg x -> [i|-#{x}|]
---         And x y -> [i|#{x} && #{y}|]
---         Or x y -> [i|#{x} || #{y}|]
---         Add x y -> [i|#{x} + #{y}|]
---         Sub x y -> [i|#{x} - #{y}|]
---         Mul x y -> [i|#{x} * #{y}|]
---         Div x y -> [i|#{x} / #{y}|]
-
 expr :: Parser Expr
-expr =
-    makeExprParser terms operators
-    where
-        terms :: Parser Expr
-        terms =
-            choice
-                [ parens expr
-                , -- , Var <$> var
-                  Nat <$> nat
-                , Boo <$> boo
-                ]
-        operators :: [[Operator Parser Expr]]
-        operators =
-            [
-                [ prefix '-' Neg
-                ]
-            , -- , [suffix "++" (+ 1)]
+expr = app
 
-                [ infix' '*' Mul
-                , infix' '/' Div
-                , infix' '&' And
-                , infix' '|' Or
-                , infix' '=' Eq
-                ]
-            ,
-                [ infix' '+' Add
-                , infix' '-' Sub
-                ]
-            ]
+app :: Parser Expr
+app = do
+    left <- lam
+    rightOpt <- optional $ char ' ' *> expr
+    case rightOpt of
+        Nothing -> pure left
+        Just right ->
+            pure $ App left right
 
--- var :: Parser Text
--- var =
---     lexeme (T.cons <$> alphaNumChar <*> takeWhileP Nothing isAlphaNum <?> "variable")
+lam :: Parser Expr
+lam = (Lam <$> between (symbol '\\') (symbol '.') var <*> value) <|> value
+
+value :: Parser Expr
+value = parens expr <|> var
+
+var :: Parser Expr
+var = Var <$> var'
+
+var' :: Parser Text
+var' =
+    lexeme (T.cons <$> alphaNumChar <*> takeWhileP Nothing isAlphaNum <?> "variable")
 
 -- -- 0000123 is technically valid :thinking:
 nat :: Parser Word
@@ -139,8 +102,11 @@ colon = symbol ':'
 pipe :: Parser Text
 pipe = symbol '|'
 
-elbow :: Parser Text
-elbow = symbol '\\'
+backslash :: Parser Text
+backslash = symbol '\\'
+
+slash :: Parser Text
+slash = symbol '/'
 
 dot :: Parser Text
 dot = symbol '.'

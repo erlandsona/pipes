@@ -9,10 +9,12 @@ import Test.Tasty qualified
 -- writing tests. Its website has more info: <https://hspec.github.io>.
 
 import Test.Hspec
+import Test.Hspec.Megaparsec
 import Test.Tasty.Hspec
 
-import Ast
-import Lib
+import Calc
+import Lam
+import Lib qualified
 
 main :: IO ()
 main = do
@@ -21,8 +23,20 @@ main = do
 
 spec :: Spec
 spec = parallel do
-    it "Test Parsing MyProgram.|" do
-        result <- go "test/MyProgram.|"
-        result `shouldBe` Right (Or (Add (Nat 123) (Eq (Mul (Nat 1) (Nat 5)) (Boo True))) (Eq (Nat 4) (Nat 5)))
-    it "reduces" do
-        True `shouldBe` False
+    it "Test Parsing Main.calc" do
+        result <- Lib.calc "test/Main.calc"
+        result
+            `shouldParse` do
+                Or
+                    ( Add
+                        (Nat 123)
+                        ( Eq
+                            (Mul (Nat 1) (Nat 5))
+                            (Boo True)
+                        )
+                    )
+                    (Eq (Nat 4) (Nat 5))
+
+    it "Test Parsing Main.lam" do
+        result <- Lib.lam "test/Main.lam"
+        result `shouldParse` Lam (Var "x") (Var "x")
