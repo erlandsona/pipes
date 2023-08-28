@@ -39,4 +39,4 @@ spec = parallel do
 
     it "Test Parsing Main.lam" do
         result <- Lib.lam "test/Main.lam"
-        result `shouldParse` Lam (Var "x") (Var "x")
+        result `shouldParse` App (Lam (Var "x") (Var "x")) (Lam (Var "x") (Lam (Var "y") (Var "x")))
