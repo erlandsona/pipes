@@ -79,5 +79,5 @@ spec = parallel do
           |]
           output = App (Lam (Var "x") (Lam (Var "y") (Var "x"))) (Lam (Var "z") (Var "z"))
         parse Lam.expr "" in1 `shouldParse` output
-        -- parse Lam.expr "" in2 `shouldParse` output
-        -- parse Lam.expr "" in3 `shouldParse` output
+        parse Lam.expr "" in2 `shouldParse` output
+        parse Lam.expr "" in3 `shouldParse` output

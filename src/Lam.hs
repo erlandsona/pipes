@@ -33,7 +33,10 @@ value :: Parser Expr
 value = parens expr <|> var
 
 var :: Parser Expr
-var = Var <$> lexeme (T.cons <$> alphaNumChar <*> takeWhileP Nothing isAlphaNum <?> "variable")
+var = Var <$> lexeme (alphaNumChar <:> takeWhileP Nothing isAlphaNum <?> "variable")
+
+(<:>) :: Parser Char -> Parser Text -> Parser Text
+(<:>) = liftA2 T.cons
 
 -- Affixes: pre-fix (before stuff), inf-fix (middle stuff), suf-fix (after stuff)
 
