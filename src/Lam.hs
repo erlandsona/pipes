@@ -18,19 +18,19 @@ data Expr
     deriving (Show, Eq)
 
 expr :: Parser Expr
-expr = commentableSpace *> app
+expr = commentableSpace *> app <* eof
 
 app :: Parser Expr
 app = do
     left <- lam
-    right <- optional expr
+    right <- optional app
     pure $ maybe left (App left) right
 
 lam :: Parser Expr
 lam = (Lam <$> between (symbol '\\') (symbol '.') var <*> value) <|> value
 
 value :: Parser Expr
-value = parens expr <|> var
+value = parens app <|> var
 
 var :: Parser Expr
 var = Var <$> lexeme (alphaNumChar <:> takeWhileP Nothing isAlphaNum <?> "variable")
