@@ -68,16 +68,16 @@ spec = parallel do
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
 
-    -- it "Test Parsing Application" do
-    --     let
-    --       in1 = "(\\ x. (\\ y. x)) (\z. z)"
-    --       in2 = "(\\x. (\\y . x)) (\z. z)"
-    --       in3 :: Text
-    --       in3 = [__i|
-    --         -- Application
-    --         (\\x. (\\y . x)) (\z. z)
-    --       |]
-    --       output = Lam (Var "x") (Lam (Var "y") (Var "x"))
-    --     parse Lam.expr "" in1 `shouldParse` output
-    --     parse Lam.expr "" in2 `shouldParse` output
-    --     parse Lam.expr "" in3 `shouldParse` output
+    it "Test Parsing Application" do
+        let
+          in1 = "(\\ x. (\\ y. x)) (\\z. z)"
+          in2 = "(\\x. (\\y . x)) (\\z. z)"
+          in3 :: Text
+          in3 = [__i|
+            -- Application
+            (\\x. (\\y . x)) (\\z. z)
+          |]
+          output = App (Lam (Var "x") (Lam (Var "y") (Var "x"))) (Lam (Var "z") (Var "z"))
+        parse Lam.expr "" in1 `shouldParse` output
+        -- parse Lam.expr "" in2 `shouldParse` output
+        -- parse Lam.expr "" in3 `shouldParse` output
