@@ -81,3 +81,8 @@ spec = parallel do
         parse Lam.expr "" in1 `shouldParse` output
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
+
+
+    -- it "parses a Main.lam" do
+    --     result <- Lib.lam "test/Main.lam"
+    --     result `shouldParse` Lam (Var "x") (Var "y")
