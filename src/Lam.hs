@@ -21,10 +21,9 @@ expr :: Parser Expr
 expr = commentableSpace *> app <* eof
 
 app :: Parser Expr
-app = do
-    left <- lam
-    right <- optional app
-    pure $ maybe left (App left) right
+app = app' <$> lam <*> optional app
+    where
+        app' left = maybe left (App left)
 
 lam :: Parser Expr
 lam = (Lam <$> between (symbol '\\') (symbol '.') var <*> value) <|> value
