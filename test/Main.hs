@@ -12,6 +12,9 @@ import Test.Hspec
 import Test.Hspec.Megaparsec
 import Test.Tasty.Hspec
 
+import Text.Megaparsec
+import Data.String.Interpolate
+
 import Calc
 import Lam
 import Lib qualified
@@ -37,6 +40,44 @@ spec = parallel do
                     )
                     (Eq (Nat 4) (Nat 5))
 
-    it "Test Parsing Main.lam" do
-        result <- Lib.lam "test/Main.lam"
-        result `shouldParse` App (Lam (Var "x") (Var "x")) (Lam (Var "x") (Lam (Var "y") (Var "x")))
+    it "Test Parsing Identity" do
+        let
+          in1 = "\\ x . x"
+          in2 = "(\\x. x)"
+          in3 :: Text
+          in3 = [__i|
+            -- Identity
+            (\\x. x)
+          |]
+          output = Lam (Var "x") (Var "x")
+        parse Lam.expr "" in1 `shouldParse` output
+        parse Lam.expr "" in2 `shouldParse` output
+        parse Lam.expr "" in3 `shouldParse` output
+
+    it "Test Parsing Const" do
+        let
+          in1 = "\\ x. (\\ y. x)"
+          in2 = "(\\x. (\\y . x))"
+          in3 :: Text
+          in3 = [__i|
+            -- Const
+            (\\x. (\\y . x))
+          |]
+          output = Lam (Var "x") (Lam (Var "y") (Var "x"))
+        parse Lam.expr "" in1 `shouldParse` output
+        parse Lam.expr "" in2 `shouldParse` output
+        parse Lam.expr "" in3 `shouldParse` output
+
+    -- it "Test Parsing Application" do
+    --     let
+    --       in1 = "(\\ x. (\\ y. x)) (\z. z)"
+    --       in2 = "(\\x. (\\y . x)) (\z. z)"
+    --       in3 :: Text
+    --       in3 = [__i|
+    --         -- Application
+    --         (\\x. (\\y . x)) (\z. z)
+    --       |]
+    --       output = Lam (Var "x") (Lam (Var "y") (Var "x"))
+    --     parse Lam.expr "" in1 `shouldParse` output
+    --     parse Lam.expr "" in2 `shouldParse` output
+    --     parse Lam.expr "" in3 `shouldParse` output

@@ -4,12 +4,10 @@ import Relude hiding (many, show, some, takeWhile)
 
 import Control.Monad.Combinators.Expr
 import Data.Char
-import Data.String.Interpolate (i)
 import Data.Text qualified as T
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
-import Text.Show
 
 type Parser = Parsec Void Text
 
@@ -20,12 +18,12 @@ data Expr
     deriving (Show, Eq)
 
 expr :: Parser Expr
-expr = app <* eof
+expr = commentableSpace *> app
 
 app :: Parser Expr
 app = do
     left <- lam
-    right <- optional $ char ' ' *> expr
+    right <- optional expr
     pure $ maybe left (App left) right
 
 lam :: Parser Expr
@@ -35,11 +33,7 @@ value :: Parser Expr
 value = parens expr <|> var
 
 var :: Parser Expr
-var = Var <$> var'
-
-var' :: Parser Text
-var' =
-    lexeme (T.cons <$> alphaNumChar <*> takeWhileP Nothing isAlphaNum <?> "variable")
+var = Var <$> lexeme (T.cons <$> alphaNumChar <*> takeWhileP Nothing isAlphaNum <?> "variable")
 
 -- Affixes: pre-fix (before stuff), inf-fix (middle stuff), suf-fix (after stuff)
 
@@ -101,9 +95,16 @@ dot = symbol '.'
 eq :: Parser Text
 eq = symbol '='
 
+commentableSpace :: Parser ()
+commentableSpace =
+    L.space
+        space1
+        (L.skipLineComment "--")
+        (L.skipBlockComment "---" "---")
+
 -- Whitespace consuming primitives
 lexeme :: Parser a -> Parser a
-lexeme = L.lexeme space
+lexeme = L.lexeme commentableSpace
 
 symbol :: Char -> Parser Text
-symbol = L.symbol space . T.singleton
+symbol = L.symbol commentableSpace . T.singleton

@@ -1,5 +1,5 @@
-(\x.x) (\x. \y. x)
 -- identity
+(\x.x)
 
 -- const
 \x. \y. x

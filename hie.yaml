@@ -3,6 +3,10 @@ cradle:
     - path: "./src"
       component: "pipes:lib"
 
+    - path: "./test/Main.hs"
+      component: "pipes:test:tests"
+    #
+
     # - path: "./rms-common/src"
     #   component: "rms-common:lib"
     #
@@ -20,9 +24,6 @@ cradle:
 
     # - path: "./rms-notes/exec/Main.hs"
     #   component: "rms-notes:exe:rms-notes"
-    #
-    # - path: "./rms-notes/exec/njson-test/Main.hs"
-    #   component: "rms-notes:exe:njson-test"
     #
     # - path: "./rms-notes/test"
     #   component: "rms-notes:test:tests"

@@ -2,8 +2,8 @@ module Lib where
 
 import Relude
 
-import Data.Text qualified as T
-import Data.Void
+import Data.Text ()
+import Data.Void ()
 import Text.Megaparsec
 
 import Calc qualified
