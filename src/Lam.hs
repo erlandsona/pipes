@@ -20,16 +20,13 @@ data Expr
     deriving (Show, Eq)
 
 expr :: Parser Expr
-expr = app
+expr = app <* eof
 
 app :: Parser Expr
 app = do
     left <- lam
-    rightOpt <- optional $ char ' ' *> expr
-    case rightOpt of
-        Nothing -> pure left
-        Just right ->
-            pure $ App left right
+    right <- optional $ char ' ' *> expr
+    pure $ maybe left (App left) right
 
 lam :: Parser Expr
 lam = (Lam <$> between (symbol '\\') (symbol '.') var <*> value) <|> value
@@ -43,16 +40,6 @@ var = Var <$> var'
 var' :: Parser Text
 var' =
     lexeme (T.cons <$> alphaNumChar <*> takeWhileP Nothing isAlphaNum <?> "variable")
-
--- -- 0000123 is technically valid :thinking:
-nat :: Parser Word
-nat = fromIntegral @Integer <$> lexeme L.decimal
-
-boo :: Parser Bool
-boo = true <|> false
-    where
-        true = True <$ string "true"
-        false = False <$ string "false"
 
 -- Affixes: pre-fix (before stuff), inf-fix (middle stuff), suf-fix (after stuff)
 
@@ -120,17 +107,3 @@ lexeme = L.lexeme space
 
 symbol :: Char -> Parser Text
 symbol = L.symbol space . T.singleton
-
--- data Expr where
---   Var :: Text -> Expr
---   Lam :: (Bind Expr) -> Expr
---   App :: Expr -> Expr -> Expr
---   deriving (Eq, Generic)
-
--- instance VarC Expr where
---   var = Var
---   isvar (Var v) = Just v
---   isvar _ = Nothing
-
--- instance FreeVarsC Expr
--- instance SubstC Expr Expr
