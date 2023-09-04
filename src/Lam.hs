@@ -9,16 +9,20 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
 
-type Parser = Parsec Void Text
+-- Wrapper to disambiguate the OverloadedStrings IsString instance below.
+newtype Parser a = Parser {un :: Parsec Void Text a}
+    deriving (Monad, Alternative, Applicative, Functor, MonadParsec Void Text, MonadPlus)
 
-expr :: Parser Expr
-expr = commentableSpace *> app <* eof
+expr :: Parsec Void Text Expr
+expr = un $ commentableSpace *> app <* eof
 
 app :: Parser Expr
 app = try (mkApp <*> lam <*> app) <|> lam
 
 lam :: Parser Expr
-lam = (mkLam <*> between (symbol '\\') (symbol '.') var <*> value) <|> value
+lam = (mkLam <*> vars <*> value) <|> value
+    where
+        vars = "\\" *> var <* "."
 
 value :: Parser Expr
 value = parens app <|> var
@@ -41,6 +45,14 @@ mkLam = pure Lam
 
 mkApp :: Parser (Expr -> Expr -> Expr)
 mkApp = pure App
+
+instance u ~ () => IsString (Parser u) where
+    fromString str
+        | str `elem` keywords = void $ keyword (T.pack str)
+        | otherwise = void $ text (T.pack str)
+
+keywords :: [String]
+keywords = []
 
 (<:>) :: Parser Char -> Parser Text -> Parser Text
 (<:>) = liftA2 T.cons
@@ -118,3 +130,9 @@ lexeme = L.lexeme commentableSpace
 
 symbol :: Char -> Parser Text
 symbol = L.symbol commentableSpace . T.singleton
+
+text :: Text -> Parser Text
+text = L.symbol commentableSpace
+
+keyword :: Text -> Parser ()
+keyword t = text t *> notFollowedBy alphaNumChar
