@@ -11,28 +11,36 @@ import Text.Megaparsec.Char.Lexer qualified as L
 
 type Parser = Parsec Void Text
 
+expr :: Parser Expr
+expr = commentableSpace *> app <* eof
+
+app :: Parser Expr
+app = try (mkApp <*> lam <*> app) <|> lam
+
+lam :: Parser Expr
+lam = (mkLam <*> between (symbol '\\') (symbol '.') var <*> value) <|> value
+
+value :: Parser Expr
+value = parens app <|> var
+
+var :: Parser Expr
+var = mkVar <*> lexeme (alphaNumChar <:> takeWhileP Nothing isAlphaNum <?> "variable")
+
 data Expr
     = Var Text
     | Lam Expr Expr
     | App Expr Expr
     deriving (Show, Eq)
 
-expr :: Parser Expr
-expr = commentableSpace *> app <* eof
+-- Add Smart Constructors
+mkVar :: Parser (Text -> Expr)
+mkVar = pure Var
 
-app :: Parser Expr
-app = app' <$> lam <*> optional app
-    where
-        app' left = maybe left (App left)
+mkLam :: Parser (Expr -> Expr -> Expr)
+mkLam = pure Lam
 
-lam :: Parser Expr
-lam = (Lam <$> between (symbol '\\') (symbol '.') var <*> value) <|> value
-
-value :: Parser Expr
-value = parens app <|> var
-
-var :: Parser Expr
-var = Var <$> lexeme (alphaNumChar <:> takeWhileP Nothing isAlphaNum <?> "variable")
+mkApp :: Parser (Expr -> Expr -> Expr)
+mkApp = pure App
 
 (<:>) :: Parser Char -> Parser Text -> Parser Text
 (<:>) = liftA2 T.cons
