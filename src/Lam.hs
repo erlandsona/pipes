@@ -8,6 +8,7 @@ import Data.Text qualified as T
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
+import Unbound.Generics.LocallyNameless qualified as U
 
 -- Wrapper to disambiguate the OverloadedStrings IsString instance below.
 newtype Parser a = Parser {un :: Parsec Void Text a}
@@ -17,34 +18,100 @@ expr :: Parsec Void Text Expr
 expr = un $ commentableSpace *> app <* eof
 
 app :: Parser Expr
-app = try (mkApp <*> lam <*> app) <|> lam
+app = try (appP <*> lam <*> app) <|> lam
 
 lam :: Parser Expr
-lam = (mkLam <*> vars <*> value) <|> value
+lam = lamP <*> vars <*> value <|> value
     where
-        vars = "\\" *> var <* "."
+        vars :: Parser Var
+        vars = "\\" *> varP <* "."
 
 value :: Parser Expr
-value = parens app <|> var
+value = parens app <|> valP
 
-var :: Parser Expr
-var = mkVar <*> lexeme (alphaNumChar <:> takeWhileP Nothing isAlphaNum <?> "variable")
+nameP :: Parser Text
+nameP = lexeme (alphaNumChar <:> takeWhileP Nothing isAlphaNum <?> "variable")
+
+type Var = U.Name Expr
 
 data Expr
-    = Var Text
-    | Lam Expr Expr
+    = Val Var
+    | Lam (U.Bind Var Expr)
     | App Expr Expr
-    deriving (Show, Eq)
+    deriving (Show, Generic)
+
+instance Eq Expr where
+    e1 == e2 = U.aeq e1 e2
+
+-- | With generic programming, the default implementation of Alpha
+-- provides alpha-equivalence, open, close, and free variable calculation.
+instance U.Alpha Expr where
+    {-# SPECIALIZE instance U.Alpha Expr #-}
+
+-- | The subst class uses generic programming to implement capture
+-- avoiding substitution. It just needs to know where the variables
+-- are.
+instance U.Subst Expr Expr where
+    {-# SPECIALIZE instance U.Subst Expr Expr #-}
+    isvar (Val x) = Just (U.SubstName x)
+    isvar _ = Nothing
+    {-# INLINE U.isvar #-}
+
+-- Normalization must be done in a freshness monad.
+-- We use the one from unbound-generics
+nf :: Expr -> Expr
+nf = U.runFreshM . nfd
+
+nfd :: Expr -> U.FreshM Expr
+nfd e@(Val _) = return e
+nfd (Lam e) =
+    do
+        (x, e') <- U.unbind e
+        e1 <- nfd e'
+        return $ Lam (U.bind x e1)
+nfd (App f a) = do
+    f' <- whnf f
+    case f' of
+        Lam b -> do
+            (x, b') <- U.unbind b
+            nfd (U.subst x a b')
+        _ -> App <$> nfd f' <*> nfd a
+
+whnf :: Expr -> U.FreshM Expr
+whnf e@(Val _) = return e
+whnf e@(Lam _) = return e
+whnf (App f a) = do
+    f' <- whnf f
+    case f' of
+        Lam b -> do
+            (x, b') <- U.unbind b
+            whnf (U.subst x a b')
+        _ -> return $ App f' a
 
 -- Add Smart Constructors
-mkVar :: Parser (Text -> Expr)
-mkVar = pure Var
+mkVar :: Text -> Var
+mkVar = U.s2n . T.unpack
 
-mkLam :: Parser (Expr -> Expr -> Expr)
-mkLam = pure Lam
+varP :: Parser Var
+varP = mkVar <$> nameP
 
-mkApp :: Parser (Expr -> Expr -> Expr)
-mkApp = pure App
+mkVal :: Text -> Expr
+mkVal = Val . mkVar
+
+valP :: Parser Expr
+valP = mkVal <$> nameP
+
+mkLam :: (Var -> Expr -> Expr)
+mkLam name e = Lam (U.bind name e)
+
+lamP :: Parser (Var -> Expr -> Expr)
+lamP = pure mkLam
+
+mkApp :: (Expr -> Expr -> Expr)
+mkApp = App
+
+appP :: Parser (Expr -> Expr -> Expr)
+appP = pure mkApp
 
 instance u ~ () => IsString (Parser u) where
     fromString str
@@ -79,7 +146,7 @@ infix' name f = InfixN (f <$ symbol name)
 
 ternary :: Char -> Char -> (a -> a -> a -> a) -> Operator Parser a
 ternary if' else' f =
-    TernR ((f <$ symbol if') <$ symbol else')
+    TernR (f <$ symbol if' <$ symbol else')
 
 parens :: Parser a -> Parser a
 parens = between (symbol '(') (symbol ')')

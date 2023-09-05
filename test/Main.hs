@@ -49,7 +49,7 @@ spec = parallel do
             -- Identity
             (\\x. x)
           |]
-          output = Lam (Var "x") (Var "x")
+          output = mkLam (mkVar "x") (mkVal "x")
         parse Lam.expr "" in1 `shouldParse` output
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
@@ -63,7 +63,7 @@ spec = parallel do
             -- Const
             (\\x. (\\y . x))
           |]
-          output = Lam (Var "x") (Lam (Var "y") (Var "x"))
+          output = mkLam (mkVar "x") (mkLam (mkVar "y") (mkVal "x"))
         parse Lam.expr "" in1 `shouldParse` output
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
@@ -77,7 +77,7 @@ spec = parallel do
             -- Application
             (\\x. (\\y . x)) (\\z. z)
           |]
-          output = App (Lam (Var "x") (Lam (Var "y") (Var "x"))) (Lam (Var "z") (Var "z"))
+          output = mkApp (mkLam (mkVar "x") (mkLam (mkVar "y") (mkVal "x"))) (mkLam (mkVar "z") (mkVal "z"))
         parse Lam.expr "" in1 `shouldParse` output
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
