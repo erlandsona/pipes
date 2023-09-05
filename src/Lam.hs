@@ -10,10 +10,6 @@ import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
 import Unbound.Generics.LocallyNameless qualified as U
 
--- Wrapper to disambiguate the OverloadedStrings IsString instance below.
-newtype Parser a = Parser {un :: Parsec Void Text a}
-    deriving (Monad, Alternative, Applicative, Functor, MonadParsec Void Text, MonadPlus)
-
 expr :: Parsec Void Text Expr
 expr = un $ commentableSpace *> app <* eof
 
@@ -113,6 +109,19 @@ mkApp = App
 appP :: Parser (Expr -> Expr -> Expr)
 appP = pure mkApp
 
+-- Wrapper to disambiguate the OverloadedStrings IsString instance below.
+newtype Parser a = Parser {un :: Parsec' a}
+    deriving
+        ( Monad
+        , Alternative
+        , Applicative
+        , Functor
+        , MonadParsec Void Text
+        , MonadPlus
+        )
+
+type Parsec' = Parsec Void Text
+
 instance u ~ () => IsString (Parser u) where
     fromString str
         | str `elem` keywords = void $ keyword (T.pack str)
@@ -126,63 +135,39 @@ keywords = []
 
 -- Affixes: pre-fix (before stuff), inf-fix (middle stuff), suf-fix (after stuff)
 
-prefix :: Char -> (a -> a) -> Operator Parser a
-prefix name f = Prefix (f <$ symbol name)
+prefix :: Parser () -> (a -> a) -> Operator Parser a
+prefix name f = Prefix (f <$ name)
 
-suffix :: Char -> (a -> a) -> Operator Parser a
-suffix name f = Postfix (f <$ symbol name)
+suffix :: Parser () -> (a -> a) -> Operator Parser a
+suffix name f = Postfix (f <$ name)
 
 -- Parens implied to the right
-infixr' :: Char -> (a -> a -> a) -> Operator Parser a
-infixr' name f = InfixR (f <$ symbol name)
+infixr' :: Parser () -> (a -> a -> a) -> Operator Parser a
+infixr' name f = InfixR (f <$ name)
 
 -- Parens implied to the left
-infixl' :: Char -> (a -> a -> a) -> Operator Parser a
-infixl' name f = InfixL (f <$ symbol name)
+infixl' :: Parser () -> (a -> a -> a) -> Operator Parser a
+infixl' name f = InfixL (f <$ name)
 
 -- Non-Associative
-infix' :: Char -> (a -> a -> a) -> Operator Parser a
-infix' name f = InfixN (f <$ symbol name)
+infix' :: Parser () -> (a -> a -> a) -> Operator Parser a
+infix' name f = InfixN (f <$ name)
 
-ternary :: Char -> Char -> (a -> a -> a -> a) -> Operator Parser a
+ternary :: Parser () -> Parser () -> (a -> a -> a -> a) -> Operator Parser a
 ternary if' else' f =
-    TernR (f <$ symbol if' <$ symbol else')
+    TernR (f <$ if' <$ else')
 
 parens :: Parser a -> Parser a
-parens = between (symbol '(') (symbol ')')
+parens p = "(" *> p <* ")"
 
 braces :: Parser a -> Parser a
-braces = between (symbol '{') (symbol '}')
+braces p = "{" *> p <* "}"
 
 angles :: Parser a -> Parser a
-angles = between (symbol '<') (symbol '>')
+angles p = "<" *> p <* ">"
 
 brackets :: Parser a -> Parser a
-brackets = between (symbol '[') (symbol ']')
-
-semicolon :: Parser Text
-semicolon = symbol ';'
-
-comma :: Parser Text
-comma = symbol ','
-
-colon :: Parser Text
-colon = symbol ':'
-
-pipe :: Parser Text
-pipe = symbol '|'
-
-backslash :: Parser Text
-backslash = symbol '\\'
-
-slash :: Parser Text
-slash = symbol '/'
-
-dot :: Parser Text
-dot = symbol '.'
-
-eq :: Parser Text
-eq = symbol '='
+brackets p = "[" *> p <* "]"
 
 commentableSpace :: Parser ()
 commentableSpace =
@@ -194,9 +179,6 @@ commentableSpace =
 -- Whitespace consuming primitives
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme commentableSpace
-
-symbol :: Char -> Parser Text
-symbol = L.symbol commentableSpace . T.singleton
 
 text :: Text -> Parser Text
 text = L.symbol commentableSpace

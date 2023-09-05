@@ -10,13 +10,13 @@ main :: IO ()
 main = do
     input <- getLine
     expression <- eval input
-    print . show $ nf expression
+    putTextLn . show @Text $ nf expression
     main
 
 eval :: Text -> IO Expr
 eval input =
     case parse Lam.expr "" input of
-        Right exp -> pure exp
+        Right e -> pure e
         Left err -> do
             putStrLn (errorBundlePretty err)
             putStrLn "Try Identity: \\x. x"

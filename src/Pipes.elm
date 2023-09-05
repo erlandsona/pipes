@@ -24,10 +24,11 @@ module Pipes exposing
 
 
 {-| Pipe is the "anonymous" "Sum Type".
-Any Inductive Type can be implemented in terms of this type.
 -}
 type Pipe e a
+    -- L Looks like a 90deg pipe, a Turn if you will.
     = L e
+    -- The Roman numeral capital I looks like a Pipe fitting with no turns.
     | I a
 
 
@@ -52,6 +53,7 @@ type alias Boolean =
 
 
 {-| This type has accounted for all errors and only inhabits valid values.
+-- The Roman numeral capital I looks like a Pipe fitting with no turns.
 -}
 type alias I a =
     Pipe Never a
@@ -61,6 +63,7 @@ type alias I a =
 -- This type must be handled via `else` in order for the program to continue.
 
 
+{-| L Looks like a 90deg pipe, a Turn if you will. -}
 type alias L e =
     Pipe e Never
 
