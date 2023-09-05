@@ -75,7 +75,8 @@ spec = parallel do
           in3 :: Text
           in3 = [__i|
             -- Application
-            (\\x. (\\y . x)) (\\z. z)
+            (\\x. (\\y . x))
+              (\\z. z)
           |]
           output = mkApp (mkLam (mkVar "x") (mkLam (mkVar "y") (mkVal "x"))) (mkLam (mkVar "z") (mkVal "z"))
         parse Lam.expr "" in1 `shouldParse` output
