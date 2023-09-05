@@ -4,6 +4,20 @@ const a b \a
 
 flip f a b \f b a
 
+(x y. x) 123
+
+: [BadRequest] Person
+x y
+  \ x
+   \ stuff : [Int] Str
+   | Err int
+   \ Sum.onClick
+    \ y int
+     \ things : String -> [BadRequest] Person
+
+
+
+
 - nat -> nat -> Bool
 check one two
   \one = two

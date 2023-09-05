@@ -1,0 +1,10 @@
+
+()
+\ (onClick, view)
+
+onClick ()
+  \ SomeMsg
+
+
+view model
+  \ text model.name
