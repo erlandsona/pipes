@@ -11,7 +11,7 @@ import Text.Megaparsec.Char.Lexer qualified as L
 import Unbound.Generics.LocallyNameless qualified as U
 
 expr :: Parsec Void Text Expr
-expr = un $ commentableSpace *> app <* eof
+expr = toParsec $ commentableSpace *> app <* eof
 
 app :: Parser Expr
 app = try (appP <*> lam <*> app) <|> lam
@@ -110,7 +110,7 @@ appP :: Parser (Expr -> Expr -> Expr)
 appP = pure mkApp
 
 -- Wrapper to disambiguate the OverloadedStrings IsString instance below.
-newtype Parser a = Parser {un :: Parsec' a}
+newtype Parser a = Parser {toParsec :: Parsec Void Text a}
     deriving
         ( Monad
         , Alternative
@@ -119,8 +119,6 @@ newtype Parser a = Parser {un :: Parsec' a}
         , MonadParsec Void Text
         , MonadPlus
         )
-
-type Parsec' = Parsec Void Text
 
 instance u ~ () => IsString (Parser u) where
     fromString str
