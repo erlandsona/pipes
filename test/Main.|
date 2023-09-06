@@ -26,7 +26,34 @@ check one two
 and 1 2
   \1 & 2
 
+- bool
+true t f
+  t
 
-- option a
-| none : option a
-| some : a -> option a
+false t f
+  f
+
+and x y t f
+  x (y t f) f
+
+or x y t f
+  x t (y t f)
+
+not x t f
+  x f t
+
+-- Constructors of Option a
+option(none: b, some: a: b, opt: option a): b
+
+-- Church Constructors of Option a
+none fst snd
+  fst
+some x fst snd
+  snd x
+
+either: l r 
+"left": x l r: l x
+"right": x l r: r x
+
+
+
