@@ -56,8 +56,8 @@ spec = parallel do
 
     it "Test Parsing Const" do
         let
-          in1 = "x\\  (y\\  x)"
-          in2 = "(x\\ (y \\ x))"
+          in1 = "x y \\  x"
+          in2 = "(x \\ (y \\ x))"
           in3 :: Text
           in3 = [__i|
             -- Const
@@ -75,8 +75,8 @@ spec = parallel do
           in3 :: Text
           in3 = [__i|
             -- Application
-            (x\\ (y \\ x))
-              (z\\ z)
+            x y \\ x
+              z \\ z
           |]
           output = mkApp (mkLams [ mkVar "x", mkVar "y" ] (mkVal "x")) (mkLams [ mkVar "z" ] (mkVal "z"))
         parse Lam.expr "" in1 `shouldParse` output
