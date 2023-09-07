@@ -1,0 +1,20 @@
+---
+-- In OCaml
+module Church_Product : Product = struct
+    type ('a , 'b) product = { run : 'c. ('a -> 'b -> 'c) -> 'c}
+    let mk x y = { run = fun f -> f x y }
+    let fst p = p.run @@ fun x _ -> x
+    let snd p = p.run @@ fun _ y -> y
+end;;
+---
+\.
+
+mk a b run =
+   run a b
+
+fst pair =
+    \x y. x
+     \pair
+
+snd pair =
+    pair \x y. y

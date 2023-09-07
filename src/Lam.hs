@@ -19,7 +19,7 @@ lam :: Parser Expr
 lam = lamsP <*> vars <*> value <|> value
     where
         vars :: Parser [Var]
-        vars = "\\" *> many varP <* "."
+        vars = many varP <* "\\"
 
 value :: Parser Expr
 value = "(" *> app <* ")" <|> valP
@@ -30,13 +30,17 @@ nameP = lexeme (alphaNumChar <:> takeWhileP Nothing isAlphaNum <?> "variable")
 (<:>) :: Parser Char -> Parser Text -> Parser Text
 (<:>) = liftA2 T.cons
 
+-- module :: Parser Expr
+-- module = lexeme (upperChar <:> takeWhileP NOthing isAlphaNum <?> "module")
+-- newtype Module = Module {unModule :: Expr}
+
 type Var = U.Name Expr
 
 data Expr
     = Val Var
     | Lam (U.Bind Var Expr)
     | App Expr Expr
-    deriving (Show, Generic)
+    deriving (Generic, Show)
 
 instance Eq Expr where
     e1 == e2 = U.aeq e1 e2

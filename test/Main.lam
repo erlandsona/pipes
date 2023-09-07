@@ -6,3 +6,8 @@
 
 -- flip
 (\f. \x. \y. f y x)
+
+person = Tuple.mk "Bruh" 1
+
+name = Tuple.fst person
+age = Tuple.snd person

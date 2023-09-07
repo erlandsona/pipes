@@ -42,12 +42,12 @@ spec = parallel do
 
     it "Test Parsing Identity" do
         let
-          in1 = "\\ x . x"
-          in2 = "(\\x. x)"
+          in1 = "x \\  x"
+          in2 = "(x\\ x)"
           in3 :: Text
           in3 = [__i|
             -- Identity
-            (\\x. x)
+            (x\\ x)
           |]
           output = mkLams [ mkVar "x" ] (mkVal "x")
         parse Lam.expr "" in1 `shouldParse` output
@@ -56,12 +56,12 @@ spec = parallel do
 
     it "Test Parsing Const" do
         let
-          in1 = "\\ x. (\\ y. x)"
-          in2 = "(\\x. (\\y . x))"
+          in1 = "x\\  (y\\  x)"
+          in2 = "(x\\ (y \\ x))"
           in3 :: Text
           in3 = [__i|
             -- Const
-            (\\x. (\\y . x))
+            (x\\ (y \\ x))
           |]
           output = mkLams [ mkVar "x" ] (mkLams [ mkVar "y" ] (mkVal "x"))
         parse Lam.expr "" in1 `shouldParse` output
@@ -70,13 +70,13 @@ spec = parallel do
 
     it "Test Parsing Application" do
         let
-          in1 = "(\\ x y .  x) (\\z. z)"
-          in2 = "(\\x. (\\y . x)) (\\z. z)"
+          in1 = "(x y \\  x) z \\ z"
+          in2 = "(x\\ (y \\ x)) (z\\ z)"
           in3 :: Text
           in3 = [__i|
             -- Application
-            (\\x. (\\y . x))
-              (\\z. z)
+            (x\\ (y \\ x))
+              (z\\ z)
           |]
           output = mkApp (mkLams [ mkVar "x", mkVar "y" ] (mkVal "x")) (mkLams [ mkVar "z" ] (mkVal "z"))
         parse Lam.expr "" in1 `shouldParse` output
@@ -84,6 +84,6 @@ spec = parallel do
         parse Lam.expr "" in3 `shouldParse` output
 
 
-    -- it "parses a Main.lam" do
-    --     result <- Lib.lam "test/Main.lam"
-    --     result `shouldParse` Lam (Var "x") (Var "y")
+    -- it "parses a Tuple.lam" do
+    --     result <- Lib.lam "test/Tuple.lam"
+    --     result `shouldParse` (mkLams ["a", ])
