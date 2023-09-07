@@ -42,16 +42,18 @@ or x y t f
 not x t f
   x f t
 
--- Constructors of Option a
-option(none: b, some: a: b, opt: option a): b
-
 -- Church Constructors of Option a
 none fst snd
   fst
 some x fst snd
   snd x
 
-either: l r 
+-- TODO: Destructors of Option a
+option(none: b, some: a: b, opt: option a): b
+option onNone onSome fst snd
+
+
+either: l r
 "left": x l r: l x
 "right": x l r: r x
 

@@ -2,7 +2,6 @@ module Lam where
 
 import Relude hiding (many, show, some, takeWhile)
 
-import Control.Monad.Combinators.Expr
 import Data.Char
 import Data.Text qualified as T
 import Text.Megaparsec
@@ -17,16 +16,19 @@ app :: Parser Expr
 app = try (appP <*> lam <*> app) <|> lam
 
 lam :: Parser Expr
-lam = lamP <*> vars <*> value <|> value
+lam = lamsP <*> vars <*> value <|> value
     where
-        vars :: Parser Var
-        vars = "\\" *> varP <* "."
+        vars :: Parser [Var]
+        vars = "\\" *> many varP <* "."
 
 value :: Parser Expr
-value = parens app <|> valP
+value = "(" *> app <* ")" <|> valP
 
 nameP :: Parser Text
 nameP = lexeme (alphaNumChar <:> takeWhileP Nothing isAlphaNum <?> "variable")
+
+(<:>) :: Parser Char -> Parser Text -> Parser Text
+(<:>) = liftA2 T.cons
 
 type Var = U.Name Expr
 
@@ -59,12 +61,11 @@ nf :: Expr -> Expr
 nf = U.runFreshM . nfd
 
 nfd :: Expr -> U.FreshM Expr
-nfd e@(Val _) = return e
-nfd (Lam e) =
-    do
-        (x, e') <- U.unbind e
-        e1 <- nfd e'
-        return $ Lam (U.bind x e1)
+nfd e@(Val _) = pure e
+nfd (Lam e) = do
+    (x, e') <- U.unbind e
+    e1 <- nfd e'
+    pure $ Lam (U.bind x e1)
 nfd (App f a) = do
     f' <- whnf f
     case f' of
@@ -74,15 +75,15 @@ nfd (App f a) = do
         _ -> App <$> nfd f' <*> nfd a
 
 whnf :: Expr -> U.FreshM Expr
-whnf e@(Val _) = return e
-whnf e@(Lam _) = return e
+whnf e@(Val _) = pure e
+whnf e@(Lam _) = pure e
 whnf (App f a) = do
     f' <- whnf f
     case f' of
         Lam b -> do
             (x, b') <- U.unbind b
             whnf (U.subst x a b')
-        _ -> return $ App f' a
+        _ -> pure $ App f' a
 
 -- Add Smart Constructors
 mkVar :: Text -> Var
@@ -97,11 +98,14 @@ mkVal = Val . mkVar
 valP :: Parser Expr
 valP = mkVal <$> nameP
 
-mkLam :: (Var -> Expr -> Expr)
-mkLam name e = Lam (U.bind name e)
+mkLams :: [Var] -> Expr -> Expr
+mkLams = flip (foldr mkLam)
 
-lamP :: Parser (Var -> Expr -> Expr)
-lamP = pure mkLam
+mkLam :: Var -> Expr -> Expr
+mkLam name = Lam . U.bind name
+
+lamsP :: Parser ([Var] -> Expr -> Expr)
+lamsP = pure mkLams
 
 mkApp :: (Expr -> Expr -> Expr)
 mkApp = App
@@ -125,55 +129,6 @@ instance u ~ () => IsString (Parser u) where
         | str `elem` keywords = void $ keyword (T.pack str)
         | otherwise = void $ text (T.pack str)
 
-keywords :: [String]
-keywords = []
-
-(<:>) :: Parser Char -> Parser Text -> Parser Text
-(<:>) = liftA2 T.cons
-
--- Affixes: pre-fix (before stuff), inf-fix (middle stuff), suf-fix (after stuff)
-
-prefix :: Parser () -> (a -> a) -> Operator Parser a
-prefix name f = Prefix (f <$ name)
-
-suffix :: Parser () -> (a -> a) -> Operator Parser a
-suffix name f = Postfix (f <$ name)
-
--- Parens implied to the right
-infixr' :: Parser () -> (a -> a -> a) -> Operator Parser a
-infixr' name f = InfixR (f <$ name)
-
--- Parens implied to the left
-infixl' :: Parser () -> (a -> a -> a) -> Operator Parser a
-infixl' name f = InfixL (f <$ name)
-
--- Non-Associative
-infix' :: Parser () -> (a -> a -> a) -> Operator Parser a
-infix' name f = InfixN (f <$ name)
-
-ternary :: Parser () -> Parser () -> (a -> a -> a -> a) -> Operator Parser a
-ternary if' else' f =
-    TernR (f <$ if' <$ else')
-
-parens :: Parser a -> Parser a
-parens p = "(" *> p <* ")"
-
-braces :: Parser a -> Parser a
-braces p = "{" *> p <* "}"
-
-angles :: Parser a -> Parser a
-angles p = "<" *> p <* ">"
-
-brackets :: Parser a -> Parser a
-brackets p = "[" *> p <* "]"
-
-commentableSpace :: Parser ()
-commentableSpace =
-    L.space
-        space1
-        (L.skipLineComment "--")
-        (L.skipBlockComment "---" "---")
-
 -- Whitespace consuming primitives
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme commentableSpace
@@ -183,3 +138,13 @@ text = L.symbol commentableSpace
 
 keyword :: Text -> Parser ()
 keyword t = text t *> notFollowedBy alphaNumChar
+
+keywords :: [String]
+keywords = []
+
+commentableSpace :: Parser ()
+commentableSpace =
+    L.space
+        space1
+        (L.skipLineComment "--")
+        (L.skipBlockComment "---" "---")

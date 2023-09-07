@@ -49,7 +49,7 @@ spec = parallel do
             -- Identity
             (\\x. x)
           |]
-          output = mkLam (mkVar "x") (mkVal "x")
+          output = mkLams [ mkVar "x" ] (mkVal "x")
         parse Lam.expr "" in1 `shouldParse` output
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
@@ -63,14 +63,14 @@ spec = parallel do
             -- Const
             (\\x. (\\y . x))
           |]
-          output = mkLam (mkVar "x") (mkLam (mkVar "y") (mkVal "x"))
+          output = mkLams [ mkVar "x" ] (mkLams [ mkVar "y" ] (mkVal "x"))
         parse Lam.expr "" in1 `shouldParse` output
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
 
     it "Test Parsing Application" do
         let
-          in1 = "(\\ x. (\\ y. x)) (\\z. z)"
+          in1 = "(\\ x y .  x) (\\z. z)"
           in2 = "(\\x. (\\y . x)) (\\z. z)"
           in3 :: Text
           in3 = [__i|
@@ -78,7 +78,7 @@ spec = parallel do
             (\\x. (\\y . x))
               (\\z. z)
           |]
-          output = mkApp (mkLam (mkVar "x") (mkLam (mkVar "y") (mkVal "x"))) (mkLam (mkVar "z") (mkVal "z"))
+          output = mkApp (mkLams [ mkVar "x", mkVar "y" ] (mkVal "x")) (mkLams [ mkVar "z" ] (mkVal "z"))
         parse Lam.expr "" in1 `shouldParse` output
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
