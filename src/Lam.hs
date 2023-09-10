@@ -7,6 +7,7 @@ import Data.Text qualified as T
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
+import Text.Megaparsec.Debug
 import Unbound.Generics.LocallyNameless qualified as U
 
 expr :: Parsec Void Text Expr
@@ -19,13 +20,19 @@ lam :: Parser Expr
 lam = lamsP <*> vars <*> value <|> value
     where
         vars :: Parser [Var]
-        vars = many varP <* "\\"
+        vars = many varP <* "="
 
 value :: Parser Expr
 value = "(" *> app <* ")" <|> valP
 
 nameP :: Parser Text
-nameP = lexeme (alphaNumChar <:> takeWhileP Nothing isAlphaNum <?> "variable")
+nameP = lexeme (satisfy availableChars <:> takeWhileP Nothing availableChars <?> "variable")
+
+keyChars :: String
+keyChars = "= ()"
+
+availableChars :: Char -> Bool
+availableChars c = isPrint c && notElem c keyChars && not (isSpace c)
 
 (<:>) :: Parser Char -> Parser Text -> Parser Text
 (<:>) = liftA2 T.cons
@@ -125,6 +132,7 @@ newtype Parser a = Parser {toParsec :: Parsec Void Text a}
         , Applicative
         , Functor
         , MonadParsec Void Text
+        , MonadParsecDbg Void Text
         , MonadPlus
         )
 

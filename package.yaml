@@ -86,8 +86,8 @@ executables:
 # Test suite
 tests:
   pipes-test:
-    source-dirs: test
-    main: Main.hs
+    source-dirs: .
+    main: Test/Main.hs
     language: GHC2021
     dependencies:
     - pipes

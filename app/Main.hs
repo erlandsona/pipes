@@ -19,5 +19,5 @@ eval input =
         Right e -> pure e
         Left err -> do
             putStrLn (errorBundlePretty err)
-            putStrLn "Try Identity: \\x. x"
-            eval "\\x. x"
+            putStrLn "Try Identity: x = x"
+            eval "x = x"
