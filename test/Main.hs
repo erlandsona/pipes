@@ -25,6 +25,12 @@ main = do
 
 spec :: Spec
 spec = parallel do
+    describe "Parsing" do
+        syntax
+        semantics
+
+syntax :: Spec
+syntax = do
     it "Test Parsing Identity" do
         let
             in1 = "x =  x"
@@ -59,9 +65,10 @@ spec = parallel do
         let
             in1 = "fn x y = fn y x"
             output =
-                lam
-                    ["fn", "x", "y"]
-                    (app (app (ref "fn") (ref "y")) (ref "x"))
+                lam ["fn", "x", "y"] $
+                    ref "fn"
+                        `app` ref "y"
+                        `app` ref "x"
         parse Lam.expr "" in1 `shouldParse` output
 
     it "Test Parsing Application" do
@@ -75,7 +82,9 @@ spec = parallel do
                   (x y = x)
                     z = z
                 |]
-            output = app (lam ["x", "y"] (ref "x")) (lam ["z"] (ref "z"))
+            output =
+                lam ["x", "y"] (ref "x")
+                    `app` lam ["z"] (ref "z")
         parse Lam.expr "" in1 `shouldParse` output
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
@@ -85,24 +94,84 @@ spec = parallel do
             -- current = "\\ x y = (x \\) y"
             -- desired = "\\ x y = (\\) x y"
             in1 = "(\\ x y = x \\ y) ((fn a b = fn b a) (a b = a b))"
-            out = app interface (app flip dollar)
+            out = interface `app` (flip' `app` dollar)
 
-            interface = lam ["\\", "x", "y"] (app (app (ref "x") (ref "\\")) (ref "y"))
-            flip = lam ["fn", "a", "b"] (app (app (ref "fn") (ref "b")) (ref "a"))
-            dollar = lam ["a", "b"] (app (ref "a") (ref "b"))
-
-            nf =
+            interface =
+                lam ["\\", "x", "y"] $
+                    ref "x"
+                        `app` ref "\\"
+                        `app` ref "y"
+            nf' =
                 -- ???
                 -- \ x y . x |> (\a b -> b |> a) |> y
                 lam ["x", "y"] $
                     ref "x"
-                        `app` ( lam ["a", "b"] $
-                                    ref "b" `app` ref "a"
-                              )
-                        `app` (ref "y")
+                        `app` ampersand
+                        `app` ref "y"
         parse Lam.expr "" in1 `shouldParse` out
-        (Ast.nf <$> parse Lam.expr "" in1) `shouldParse` nf
+        (Ast.nf <$> parse Lam.expr "" in1) `shouldParse` nf'
+
+semantics :: Spec
+semantics = do
+    it "Test semantics infix operators" do
+        -- current = "\\ x y = (x \\) y"
+        -- desired = "\\ x y = (\\) x y"
+        let
+            notFalse = "(p a b = p b a) (a b = b)"
+        -- in1 =
+        --     [__i|
+        --       ((\\ -- Infix flip application for free?
+        --         x y =
+        --           x
+        --            \\ y
+        --         )
+        --         (
+        --           -- Flip
+        --           (fn a b = fn b a)
+        --           -- Application
+        --           (a b = a b)
+        --         )
+        --       )
+        --       -- not
+        --       (p a b = p b a)
+        --       -- true
+        --       (a b = a)
+        --     |]
+        -- out = interface `app` (flip' `app` dollar)
+        -- interface =
+        --     lam ["\\", "x", "y"] $
+        --         ref "x"
+        --             `app` ref "\\"
+        --             `app` ref "y"
+
+        (Ast.nf <$> parse Lam.expr "" notFalse) `shouldParse` true
 
 -- it "parses a Tuple.lam" do
 --     result <- Lib.lam "test/Tuple.lam"
 --     result `shouldParse` (lam ["a", ])
+
+-- Helpers
+
+flip' :: Expr
+flip' =
+    lam ["fn", "a", "b"] $
+        ref "fn" `app` ref "b" `app` ref "a"
+
+dollar :: Expr
+dollar =
+    lam ["a", "b"] $
+        ref "a" `app` ref "b"
+
+ampersand :: Expr
+ampersand =
+    lam ["a", "b"] $
+        ref "b" `app` ref "a"
+
+true :: Expr
+true = lam ["a", "b"] $ ref "a"
+
+false :: Expr
+false = lam ["a", "b"] $ ref "b"
+
+not' :: Expr
+not' = lam ["p", "a", "b"] $ ref "p" `app` ref "b" `app` ref "a"
