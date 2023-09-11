@@ -1,4 +1,4 @@
-module Ast (Expr, Name, var, lam, app, eval, lams, name, ref) where
+module Ast (Expr, Name, var, app, nf, lam, name, ref) where
 
 import Relude
 
@@ -17,20 +17,17 @@ type Name = U.Name Expr
 app :: Expr -> Expr -> Expr
 app = App
 
-lam :: Name -> Expr -> Expr
-lam n = Lam . U.bind n
+lam :: [Text] -> Expr -> Expr
+lam = flip (foldr (\n -> Lam . U.bind (name n)))
 
-lams :: [Name] -> Expr -> Expr
-lams = flip (foldr lam)
-
-ref :: String -> Expr
+ref :: Text -> Expr
 ref = Var . name
 
-var :: Name -> Expr
-var = Var
+var :: Text -> Expr
+var = Var . name
 
-name :: String -> Name
-name = U.s2n
+name :: Text -> Name
+name = U.s2n . toString
 
 instance Eq Expr where
     e1 == e2 = U.aeq e1 e2
@@ -48,9 +45,6 @@ instance U.Subst Expr Expr where
     isvar (Var x) = Just (U.SubstName x)
     isvar _ = Nothing
     {-# INLINE U.isvar #-}
-
-eval :: Expr -> Expr
-eval = nf
 
 -- Normalization must be done in a freshness monad.
 -- We use the one from unbound-generics

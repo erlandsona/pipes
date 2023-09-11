@@ -15,8 +15,8 @@ import Test.Tasty.Hspec
 import Data.String.Interpolate
 import Text.Megaparsec
 
-import Lam
-import Lib qualified
+import Ast
+import Lam qualified
 
 main :: IO ()
 main = do
@@ -35,7 +35,7 @@ spec = parallel do
                   -- Identity
                   (x= x)
                 |]
-            output = mkLams [mkVar "x"] (mkVal "x")
+            output = lam ["x"] (ref "x")
         parse Lam.expr "" in1 `shouldParse` output
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
@@ -50,7 +50,7 @@ spec = parallel do
                   -- Const
                   (x= (y = x))
                 |]
-            output = mkLams [mkVar "x", mkVar "y"] (mkVal "x")
+            output = lam ["x", "y"] (ref "x")
         parse Lam.expr "" in1 `shouldParse` output
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
@@ -59,34 +59,38 @@ spec = parallel do
         let
             in1 = "fn x y = fn y x"
             output =
-                mkLams
-                    [mkVar "fn", mkVar "x", mkVar "y"]
-                    (mkApp (mkVal "fn") (mkApp (mkVal "y") (mkVal "x")))
+                lam
+                    ["fn", "x", "y"]
+                    (app (app (ref "fn") (ref "y")) (ref "x"))
         parse Lam.expr "" in1 `shouldParse` output
 
     it "Test Parsing Application" do
         let
-            in1 = "(x y = x) z = z"
+            in1 = "(x y = x) (z = z)"
             in2 = "(x= (y = x)) (z= z)"
             in3 :: Text
             in3 =
                 [__i|
                   -- Application
-                  x y = x
+                  (x y = x)
                     z = z
                 |]
-            output = mkApp (mkLams [mkVar "x", mkVar "y"] (mkVal "x")) (mkLams [mkVar "z"] (mkVal "z"))
+            output = app (lam ["x", "y"] (ref "x")) (lam ["z"] (ref "z"))
         parse Lam.expr "" in1 `shouldParse` output
         parse Lam.expr "" in2 `shouldParse` output
         parse Lam.expr "" in3 `shouldParse` output
 
--- it "Test binding infix operators" do
---   let
---     in1 = "(\\ x y = x \\ y) (a b = a b)"
---     flipFnApp = "(a b = b a)"
---     out = mkApp (mkLams [mkVar "\\", mkVar "x", mkVar "y"] (mkApp (mkVar "x"))) (mkVal "y")
---   parse Lam.expr "" in1 `shouldParse` out
+    it "Test binding infix operators" do
+      let
+        in1 = "(\\ x y = x \\ y) ((fn a b = fn b a) (a b = a b))"
+        out = app
+                (lam ["\\",  "x",  "y"] (app (app (ref "x") (ref "\\")) (ref "y")))
+                (app
+                  (lam ["fn" , "a",  "b"] (app (app (ref "fn") (ref "b")) (ref "a")))
+                  (lam ["a", "b"] (app (ref "a") (ref "b"))))
+      parse Lam.expr "" in1 `shouldParse` out
+      (Ast.nf <$> parse Lam.expr "" in1) `shouldParse` ref "blah"
 
 -- it "parses a Tuple.lam" do
 --     result <- Lib.lam "test/Tuple.lam"
---     result `shouldParse` (mkLams ["a", ])
+--     result `shouldParse` (lam ["a", ])

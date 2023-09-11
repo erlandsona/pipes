@@ -4,16 +4,17 @@ import Relude
 
 import Text.Megaparsec
 
-import Lam
+import Ast qualified
+import Lam qualified
 
 main :: IO ()
 main = do
     input <- getLine
     expression <- eval input
-    putTextLn . show @Text $ nf expression
+    putTextLn . show @Text $ Ast.nf expression
     main
 
-eval :: Text -> IO Expr
+eval :: Text -> IO Ast.Expr
 eval input =
     case parse Lam.expr "" input of
         Right e -> pure e
