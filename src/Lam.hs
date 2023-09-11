@@ -3,14 +3,13 @@ module Lam where
 import Relude hiding (many, show, some, takeWhile)
 
 import Data.Char
-import Data.Foldable (foldl1)
 import Data.Text qualified as T
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
 import Text.Megaparsec.Debug
 
-import Ast (Expr, Name)
+import Ast (Expr)
 import Ast qualified
 
 expr :: Parsec Void Text Expr
@@ -23,7 +22,7 @@ expr = toParsec $ fully app
 --   return $ TmApp (infoFrom pos)
 
 app :: Parser Expr
-app = foldl1 Ast.app <$> some parseNonApp
+app = chainl1 parseNonApp (pure Ast.app)
 
 parseNonApp :: Parser Expr
 parseNonApp =
@@ -36,6 +35,24 @@ lam body = lamsP <*> vars <*> body
     where
         vars :: Parser [Text]
         vars = many nameP <* "="
+
+infixl1 :: (a -> b) -> Parser a -> Parser (b -> a -> b) -> Parser b
+infixl1 wrap p op = (wrap <$> p) <**> rest
+    where
+        rest =
+            flip (.)
+                <$> (flip <$> op <*> p)
+                <*> rest
+                    <|> pure id
+
+infixr1 :: (a -> b) -> Parser a -> Parser (a -> b -> b) -> Parser b
+infixr1 wrap p op = p <**> (flip <$> op <*> infixr1 wrap p op <|> pure wrap)
+
+chainl1 :: Parser b -> Parser (b -> b -> b) -> Parser b
+chainl1 = infixl1 id
+
+chainr1 :: Parser b -> Parser (b -> b -> b) -> Parser b
+chainr1 = infixr1 id
 
 nameP :: Parser Text
 nameP =
