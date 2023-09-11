@@ -41,7 +41,8 @@ dependencies:
 #   mixin: [(Relude as Prelude)]
 - base >= 4.7 && < 5
 - relude
-- megaparsec
+- gigaparsec
+# - megaparsec
 - parser-combinators
 - string-interpolate
 - unbound-generics

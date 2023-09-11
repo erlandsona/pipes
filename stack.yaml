@@ -35,10 +35,9 @@ packages:
 # These entries can reference officially published versions as well as
 # forks / in-progress versions pinned to a git hash. For example:
 #
-# extra-deps:
-# - acme-missiles-0.3
-# - git: https://github.com/commercialhaskell/stack.git
-#   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
+extra-deps:
+- git: https://github.com/j-mie6/gigaparsec
+  commit: 99a5c1660e82e35624c5ff7d38aaf6799f02d1f5
 #
 # extra-deps:
 # - parsley-2.0.0.1
