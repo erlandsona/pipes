@@ -81,15 +81,27 @@ spec = parallel do
         parse Lam.expr "" in3 `shouldParse` output
 
     it "Test binding infix operators" do
-      let
-        in1 = "(\\ x y = x \\ y) ((fn a b = fn b a) (a b = a b))"
-        out = app
-                (lam ["\\",  "x",  "y"] (app (app (ref "x") (ref "\\")) (ref "y")))
-                (app
-                  (lam ["fn" , "a",  "b"] (app (app (ref "fn") (ref "b")) (ref "a")))
-                  (lam ["a", "b"] (app (ref "a") (ref "b"))))
-      parse Lam.expr "" in1 `shouldParse` out
-      (Ast.nf <$> parse Lam.expr "" in1) `shouldParse` ref "blah"
+        let
+            -- current = "\\ x y = (x \\) y"
+            -- desired = "\\ x y = (\\) x y"
+            in1 = "(\\ x y = x \\ y) ((fn a b = fn b a) (a b = a b))"
+            out = app interface (app flip dollar)
+
+            interface = lam ["\\", "x", "y"] (app (app (ref "x") (ref "\\")) (ref "y"))
+            flip = lam ["fn", "a", "b"] (app (app (ref "fn") (ref "b")) (ref "a"))
+            dollar = lam ["a", "b"] (app (ref "a") (ref "b"))
+
+            nf =
+                -- ???
+                -- \ x y . x |> (\a b -> b |> a) |> y
+                lam ["x", "y"] $
+                    ref "x"
+                        `app` ( lam ["a", "b"] $
+                                    ref "b" `app` ref "a"
+                              )
+                        `app` (ref "y")
+        parse Lam.expr "" in1 `shouldParse` out
+        (Ast.nf <$> parse Lam.expr "" in1) `shouldParse` nf
 
 -- it "parses a Tuple.lam" do
 --     result <- Lib.lam "test/Tuple.lam"
