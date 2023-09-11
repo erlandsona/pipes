@@ -4,13 +4,14 @@ import Relude
 
 import Data.Text ()
 import Data.Void ()
-import Text.Megaparsec
+import Text.Gigaparsec
 
+import Ast qualified
 import Lam qualified
 
-type Errs = ParseErrorBundle Text Void
+-- type Errs = ParseErrorBundle Text Void
 
-lam :: FilePath -> IO (Either Errs Lam.Expr)
+lam :: FilePath -> IO (Result Ast.Expr)
 lam file = do
     contents <- decodeUtf8 <$> readFileBS file
-    pure $ parse Lam.expr file contents
+    pure $ parse Lam.expr contents
