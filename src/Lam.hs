@@ -56,13 +56,15 @@ chainr1 = infixr1 id
 
 nameP :: Parser Text
 nameP =
-    lexeme (satisfy availableChars <:> takeWhileP Nothing availableChars <?> "variable")
+    -- A name can be any individual non-alphanum character
+    -- OR for more than 2 character names the tail has to be alphaNumChar
+    lexeme (satisfy availableChars <:> takeWhileP Nothing isAlphaNum <?> "variable")
 
 (<:>) :: Parser Char -> Parser Text -> Parser Text
 (<:>) = liftA2 T.cons
 
 keyChars :: Text
-keyChars = "= ()"
+keyChars = "=()"
 
 availableChars :: Char -> Bool
 availableChars c = isPrint c && not (T.elem c keyChars) && not (isSpace c)
