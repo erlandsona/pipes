@@ -9,16 +9,20 @@ import Lam qualified
 
 main :: IO ()
 main = do
+    -- Read
     input <- getLine
-    expression <- eval input
-    putTextLn . show @Text $ Ast.nf expression
+    -- Evaluate
+    let
+        output = eval input
+    -- Print
+    putTextLn output
+    -- Loop
     main
 
-eval :: Text -> IO Ast.Expr
+eval :: Text -> Text
 eval input =
     case parse Lam.expr "" input of
-        Right e -> pure e
+        Right e ->
+            show @Text $ Ast.nf e
         Left err -> do
-            putStrLn (errorBundlePretty err)
-            putStrLn "Try Identity: x = x"
-            eval "x = x"
+            toText (errorBundlePretty err)

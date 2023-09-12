@@ -117,34 +117,33 @@ semantics = do
         -- current = "\\ x y = (x \\) y"
         -- desired = "\\ x y = (\\) x y"
         let
-            notFalse = "(p a b = p b a) (a b = b)"
-        -- in1 =
-        --     [__i|
-        --       ((\\ -- Infix flip application for free?
-        --         x y =
-        --           x
-        --            \\ y
-        --         )
-        --         (
-        --           -- Flip
-        --           (fn a b = fn b a)
-        --           -- Application
-        --           (a b = a b)
-        --         )
-        --       )
-        --       -- not
-        --       (p a b = p b a)
-        --       -- true
-        --       (a b = a)
-        --     |]
+            -- notFalse = "(p a b = p b a) (a b = b)"
+            in1 =
+                [__i|
+                ((\\ -- Infix flip application for free?
+                  x y =
+                    x \\ y
+                  )
+                  (
+                    -- Flip
+                    (fn a b = fn b a)
+                    -- Application
+                    (a b = a b)
+                  )
+                )
+                -- not
+                (p a b = p b a)
+                -- false
+                (a b = b)
+              |]
         -- out = interface `app` (flip' `app` dollar)
         -- interface =
         --     lam ["\\", "x", "y"] $
-        --         ref "x"
-        --             `app` ref "\\"
+        --         ref "\\"
+        --             `app` ref "x"
         --             `app` ref "y"
 
-        (Ast.nf <$> parse Lam.expr "" notFalse) `shouldParse` true
+        (Ast.nf <$> parse Lam.expr "" in1) `shouldParse` true
 
 -- it "parses a Tuple.lam" do
 --     result <- Lib.lam "test/Tuple.lam"
